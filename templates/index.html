@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fish Classifier</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container { 
+            max-width: 500px;
+            margin: auto;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            animation: slideInUp 0.6s ease-out;
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h1 {
+            color: #4a5568;
+            margin-bottom: 30px;
+            font-size: 2.2em;
+            font-weight: 700;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        h2 {
+            color: #4a5568;
+            margin: 30px 0 20px 0;
+            font-size: 1.5em;
+            font-weight: 600;
+        }
+
+        #uploadForm {
+            background: rgba(255, 255, 255, 0.8);
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            border: 2px dashed #667eea;
+            transition: all 0.3s ease;
+            animation: fadeIn 0.8s ease-out 0.2s both;
+        }
+
+        #uploadForm:hover {
+            border-color: #764ba2;
+            background: rgba(255, 255, 255, 0.9);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.2);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        input[type="file"] { 
+            margin: 10px 0;
+            padding: 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            background: white;
+            width: 100%;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        input[type="file"]:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        button { 
+            padding: 15px 30px;
+            margin: 10px;
+            cursor: pointer;
+            border: none;
+            border-radius: 50px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            min-width: 180px;
+        }
+
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(102, 126, 234, 0.3);
+        }
+
+        button:active {
+            transform: translateY(-1px);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            position: relative;
+        }
+
+        .loading::after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 20px;
+            height: 20px;
+            margin: -10px 0 0 -10px;
+            border: 2px solid transparent;
+            border-top: 2px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        table { 
+            margin: 20px auto;
+            border-collapse: collapse;
+            width: 100%;
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            animation: fadeIn 0.8s ease-out 0.4s both;
+        }
+
+        th, td { 
+            border: none;
+            padding: 20px;
+            text-align: center;
+            font-size: 16px;
+        }
+
+        th { 
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        td {
+            background: rgba(255, 255, 255, 0.9);
+            font-weight: 500;
+            color: #4a5568;
+        }
+
+        .result-row {
+            animation: slideInFromLeft 0.5s ease-out;
+        }
+
+        @keyframes slideInFromLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        #getLastBtn {
+            background: linear-gradient(45deg, #48bb78, #38a169);
+            animation: fadeIn 0.8s ease-out 0.6s both;
+        }
+
+        #getLastBtn:hover {
+            box-shadow: 0 15px 35px rgba(72, 187, 120, 0.3);
+        }
+
+        .confidence-bar {
+            display: inline-block;
+            width: 100px;
+            height: 10px;
+            background: #e2e8f0;
+            border-radius: 5px;
+            overflow: hidden;
+            margin-left: 10px;
+            vertical-align: middle;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #48bb78, #68d391);
+            border-radius: 5px;
+            transition: width 1s ease-out;
+            animation: fillBar 1s ease-out;
+        }
+
+        @keyframes fillBar {
+            from { width: 0%; }
+        }
+
+        .fish-icon {
+            font-size: 3em;
+            margin-bottom: 20px;
+            animation: swim 3s ease-in-out infinite;
+        }
+
+        @keyframes swim {
+            0%, 100% { transform: translateX(0) rotateY(0deg); }
+            50% { transform: translateX(20px) rotateY(180deg); }
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 10px;
+            color: white;
+            font-weight: 600;
+            z-index: 1000;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.success {
+            background: linear-gradient(45deg, #48bb78, #38a169);
+        }
+
+        .notification.error {
+            background: linear-gradient(45deg, #f56565, #e53e3e);
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                margin: 10px;
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 1.8em;
+            }
+            
+            button {
+                min-width: 150px;
+                padding: 12px 25px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="fish-icon">🐠</div>
+        <h1>Fish Image Classifier</h1>
+        
+        <!-- Upload Form -->
+        <form id="uploadForm">
+            <input type="file" id="imageInput" name="image" accept="image/*" required><br>
+            <button type="submit" id="uploadBtn">
+                <span class="btn-text">Upload & Predict</span>
+            </button>
+        </form>
+
+        <!-- Show Prediction -->
+        <h2>Latest Prediction</h2>
+        <table id="predictionTable">
+            <tr>
+                <th>Predicted Class</th>
+                <th>Confidence</th>
+            </tr>
+        </table>
+
+        <!-- Get Last Prediction Button -->
+        <button id="getLastBtn">Get Last Prediction</button>
+    </div>
+
+    <script>
+        const uploadForm = document.getElementById('uploadForm');
+        const predictionTable = document.getElementById('predictionTable');
+        const getLastBtn = document.getElementById('getLastBtn');
+        const uploadBtn = document.getElementById('uploadBtn');
+
+        // Notification function
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => notification.classList.add('show'), 100);
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => document.body.removeChild(notification), 300);
+            }, 3000);
+        }
+
+        // Upload image and predict
+        uploadForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const fileInput = document.getElementById('imageInput');
+            const formData = new FormData();
+            formData.append('image', fileInput.files[0]);
+
+            // Show loading state
+            uploadBtn.disabled = true;
+            uploadBtn.classList.add('loading');
+            uploadBtn.querySelector('.btn-text').textContent = 'Processing...';
+
+            try {
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    updateTable(data.predicted_class, data.confidence);
+                    showNotification('Prediction completed successfully!', 'success');
+                } else {
+                    showNotification(data.message, 'error');
+                }
+            } catch (error) {
+                showNotification('Error processing image', 'error');
+            } finally {
+                // Reset button state
+                uploadBtn.disabled = false;
+                uploadBtn.classList.remove('loading');
+                uploadBtn.querySelector('.btn-text').textContent = 'Upload & Predict';
+            }
+        });
+
+        // Get last prediction
+        getLastBtn.addEventListener('click', async () => {
+            getLastBtn.disabled = true;
+            getLastBtn.classList.add('loading');
+            const originalText = getLastBtn.textContent;
+            getLastBtn.textContent = 'Loading...';
+
+            try {
+                const response = await fetch('/prediction');
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    updateTable(data.predicted_class, data.confidence);
+                    showNotification('Last prediction retrieved!', 'success');
+                } else {
+                    showNotification(data.message, 'error');
+                }
+            } catch (error) {
+                showNotification('Error retrieving prediction', 'error');
+            } finally {
+                getLastBtn.disabled = false;
+                getLastBtn.classList.remove('loading');
+                getLastBtn.textContent = originalText;
+            }
+        });
+
+        // Update table function
+        function updateTable(predClass, confidence) {
+            // Remove previous row if exists
+            while (predictionTable.rows.length > 1) {
+                predictionTable.deleteRow(1);
+            }
+            
+            const row = predictionTable.insertRow();
+            row.className = 'result-row';
+            
+            const cell1 = row.insertCell(0);
+            const cell2 = row.insertCell(1);
+            
+            cell1.innerText = predClass;
+            
+            // Create confidence display with progress bar
+            const confidenceValue = parseFloat(confidence);
+            cell2.innerHTML = `
+                ${confidence}%
+                <div class="confidence-bar">
+                    <div class="confidence-fill" style="width: ${confidenceValue}%"></div>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>
